@@ -52,6 +52,24 @@ resource "aws_internet_gateway" "igw" {
  vpc_id = aws_vpc.main.id
 }
 
+# Create Nat gateway & EIP
+
+resource "aws_eip" "eip" {
+  vpc = true
+}
+
+resource "aws_nat_gateway" "natgw" {
+  allocation_id = aws_eip.eip.id
+  subnet_id     = aws_subnet.utility.id
+}
+
+resource "aws_route" "natgw" {
+  route_table_id         = aws_route_table.private-rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.natgw.id
+  depends_on             = [aws_route_table.private-rt]
+}
+
 
 # Create a Public Route Table
  
