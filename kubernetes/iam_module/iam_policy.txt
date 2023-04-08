@@ -1,0 +1,37 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": ["ssm:GetCommandInvocation"],
+                "Resource": ["arn:aws:ssm:eu-west-3:*:*"]
+            }, 
+            {
+                "Effect": "Allow",
+                "Action": ["s3:*"],
+                "Resource": [
+                "arn:aws:s3:::join.cmd.bucket.devopswithghazouani.com",
+                "arn:aws:s3:::join.cmd.bucket.devopswithghazouani.com/*"]
+            },
+            {
+                "Action": [
+                    "ssm:CreateAssociation",
+                    "ssm:CreateDocument",
+                    "ssm:GetDocument",
+                    "ssm:ListAssociations",
+                    "ssm:ListDocuments",
+                    "ssm:SendCommand"
+                ],
+                "Resource": "*",
+                "Effect": "Allow"
+            },
+            {
+                "Action": [
+                    "ec2:DescribeInstances",
+                    "ec2:StopInstances"
+                ],
+                "Effect": "Allow",
+                "Resource": "*"
+            }
+    ]
+}

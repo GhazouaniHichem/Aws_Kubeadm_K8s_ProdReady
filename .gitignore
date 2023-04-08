@@ -1,0 +1,6 @@
+terraform.*
+.terraform/
+.terraform.*
+k8_ssh_key.*
+terraform.tfvars
+inventory

@@ -1,0 +1,316 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Install required packages
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg2
+          - software-properties-common
+          - lsb-release
+
+####### Disabling swap:
+
+    - name: Remove swapfile from /etc/fstab
+      shell: |
+        swapoff -a
+        sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+####### Disabling Firewall:
+
+    - name: Disabling Firewall
+      shell: sudo ufw disable
+
+####### Installing Docker:
+
+    - name: Add an apt signing key for Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add apt repository for stable version
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+        state: present
+        update_cache: yes
+
+    - name: Install docker and its dependecies
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+
+    - name: Additional Configurations
+      shell: |
+        mkdir /etc/docker
+        cat <<EOF | sudo tee /etc/docker/daemon.json
+        {
+              "exec-opts": ["native.cgroupdriver=cgroupfs"],
+              "log-driver": "json-file",
+              "log-opts": {
+              "max-size": "100m"
+          },
+              "storage-driver": "overlay2"
+        }
+        EOF
+
+        systemctl enable --now docker
+        usermod -aG docker ubuntu
+        systemctl daemon-reload
+        systemctl restart docker
+
+
+    - name: Enable kernel modules
+      modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+
+####### Installing kubelet, kubeadm and kubectl:
+
+    - name: Add an apt signing key for Kubernetes
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Adding apt repository for Kubernetes
+      apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: kubernetes.list
+
+    - name: Install Kubernetes binaries
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - kubelet
+          - kubeadm
+          - kubectl
+
+    - name: Prevent packages from being upgraded
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+
+    - name: Enable kernel modules
+      modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Configure sysctl 
+      shell: |
+        sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.bridge.bridge-nf-call-iptables = 1
+        net.ipv4.ip_forward = 1
+        EOF
+        sudo sysctl --system
+
+
+    - name: Others Configurations
+      shell: |
+        sudo apt remove containerd
+        sudo apt update
+        sudo apt install containerd.io
+        sudo rm /etc/containerd/config.toml
+        sudo systemctl restart containerd
+
+        sudo tee /etc/default/kubelet <<EOF
+        KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"
+        EOF
+
+        systemctl daemon-reload
+        systemctl restart kubelet
+
+    - name: Sleep for 20 seconds
+      wait_for:
+        timeout: 10
+
+####### First Master Node Configurations:
+- hosts: masters_first
+  become: yes
+  vars_files:
+    - ansible_vars_file.yml
+  tasks:
+    - name: Kubectl Install
+      apt:
+        name: kubectl
+        state: present
+        force: yes
+
+    
+    - name: Enable kubelet service
+      shell: sudo systemctl enable kubelet
+
+    - name: Pull container images
+      shell: | 
+        sudo kubeadm config images pull
+        sudo kubeadm config images pull --cri-socket /run/containerd/containerd.sock
+
+    - name: Creating the config file
+      copy:
+        dest: "$HOME/kubeadm.config"
+        content: |
+          apiVersion: kubeadm.k8s.io/v1beta3
+          kind: ClusterConfiguration
+          apiServer:
+            extraArgs:
+              cloud-provider: aws
+          clusterName: "{{ cluster_name }}"
+          controlPlaneEndpoint: "{{ master_lb }}"
+          controllerManager:
+            extraArgs:
+              cloud-provider: aws
+              configure-cloud-routes: "false"
+          kubernetesVersion: stable
+          networking:
+            dnsDomain: cluster.local
+            podSubnet: 192.168.0.0/16
+            serviceSubnet: 10.96.0.0/12
+          ---
+          apiVersion: kubeadm.k8s.io/v1beta3
+          kind: InitConfiguration
+          nodeRegistration:
+            kubeletExtraArgs:
+              cloud-provider: aws
+
+
+    - name: Start the cluster
+      shell: kubeadm init --config $HOME/kubeadm.config >> cluster.txt
+      register: result
+      args:
+        chdir: $HOME
+        creates: cluster.txt
+  
+    - name: Sleep for 20 seconds
+      wait_for:
+        timeout: 20
+
+    - name: Create .kube directory
+      become: yes
+      become_user: ubuntu
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Check admin.conf file exists.
+      stat:
+        path: /etc/kubernetes/admin.conf
+      register: k8s_conf
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+      when: k8s_conf.stat.exists
+
+    - name: Install Pod network
+      become_user: ubuntu
+      shell: kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml >> pod_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_setup.txt
+      ignore_errors: true
+
+    - name: get default kubeadm config
+      shell: kubeadm config print init-defaults > kubeadm_config.yaml
+      args:
+        chdir: $HOME
+        creates: kubeadm-config.yaml
+
+    - name: Create a new certificate key
+      shell: kubeadm init phase upload-certs --upload-certs --config $HOME/kubeadm_config.yaml
+      register: join_certificate_key
+
+    - name: Get join command
+      shell: kubeadm token create --print-join-command --certificate-key "{{ join_certificate_key.stdout_lines[2] }}"
+      register: join_command
+
+    - debug:
+        var: join_command
+
+    - name: Copy join command to local file
+      local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join_command"
+
+    - name: Get worker node join command
+      shell: kubeadm token create --print-join-command
+      register: join_node_command
+
+    - name: Copy worker node join command to local file
+      local_action: copy content="{{ join_node_command.stdout_lines[0] }}" dest="./join_node_command"
+###
+
+####### Configure other master nodes:
+
+- hosts: masters_others
+  become: yes
+  tasks:
+    - name: Kubectl Install
+      apt:
+        name: kubectl
+        state: present
+        force: yes
+
+    - name: Enable kubelet service
+      shell: sudo systemctl enable kubelet
+
+    - name: Copy the master join command to server location
+      copy: src=join_command dest=/tmp/join_command.sh mode=0777
+
+    - name: Join the master node to cluster
+      command: sh /tmp/join_command.sh
+
+    - name: Sleep for 20 seconds
+      wait_for:
+        timeout: 20
+
+    - name: Create .kube directory
+      become: yes
+      become_user: ubuntu
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Check admin.conf file exists.
+      stat:
+        path: /etc/kubernetes/admin.conf
+      register: k8s_conf
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+      when: k8s_conf.stat.exists
+
+####
