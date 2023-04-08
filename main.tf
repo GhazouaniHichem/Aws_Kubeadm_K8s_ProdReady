@@ -1,10 +1,10 @@
-terraform {
-   backend "s3" {
-    bucket = "terraform.tfstate.mydomaine.com"
-    key    = "KubernetesCluster.tfstate"
-    region = "eu-west-3"
-  }
-}
+#terraform {
+#   backend "s3" {
+#    bucket = "terraform.tfstate.mydomaine.com"
+#    key    = "KubernetesCluster.tfstate"
+#    region = "eu-west-3"
+#  }
+#}
 module "kubernetes" {
   source = "./kubernetes"
   cluster_name = var.cluster_name
