@@ -1,11 +1,9 @@
 variable "AWS_REGION" {
   default = "eu-west-3"
 }
-variable "region" {
-  type    = string
-  default = "eu-west-3"
-}
+
 # If you are using diffrent region (other than eu-west-3) please find ubuntu 22.04 ami for that region and change here.
+
 variable "ami_id" {
   type    = string
   default = "ami-05b457b541faec0ca"

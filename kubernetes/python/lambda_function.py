@@ -93,7 +93,7 @@ def lambda_handler(event, context):
         
         
         
-    time.sleep(5)
+    time.sleep(10)
     for line in lines:
         my_instance = ec2_client.describe_instances(Filters=[{'Name': 'private-dns-name', 'Values': [f"{line}"]}])
         reservations_instance = my_instance['Reservations']

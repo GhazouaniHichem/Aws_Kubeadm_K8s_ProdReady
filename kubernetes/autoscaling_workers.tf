@@ -36,7 +36,7 @@ resource "aws_autoscaling_group" "nodes-k8s" {
   max_size             = var.nodes_max_size
   min_size             = var.nodes_min_size
   desired_capacity     = var.nodes_desired_size
-  vpc_zone_identifier  = aws_subnet.private.*.id
+  vpc_zone_identifier  = aws_subnet.public.*.id
 
 
   enabled_metrics = [
@@ -107,7 +107,7 @@ resource "aws_autoscaling_policy" "scale_down" {
   name                   = "${var.cluster_name}-asg-scale-down"
   autoscaling_group_name = aws_autoscaling_group.nodes-k8s.name
   adjustment_type        = "ChangeInCapacity"
-  scaling_adjustment     = "-1" # decreasing instance by 1 
+  scaling_adjustment     = "-1" # decreasing instances by 1 
   cooldown               = "300"
   policy_type            = "SimpleScaling"
 }
