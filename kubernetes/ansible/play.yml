@@ -236,14 +236,12 @@
 
     - name: Install Pod network
       become_user: ubuntu
-      shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/tigera-operator.yaml
-      args:
-        chdir: $HOME
-      ignore_errors: true
-
-    - name: Install Pod network
-      become_user: ubuntu
-      shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/custom-resources.yaml
+      shell: |
+        wget https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+        sleep 2
+        sed -i "s/10.244.0.0/192.168.0.0/g" kube-flannel.yml
+        sleep 2
+        kubectl apply -f kube-flannel.yml
       args:
         chdir: $HOME
       ignore_errors: true

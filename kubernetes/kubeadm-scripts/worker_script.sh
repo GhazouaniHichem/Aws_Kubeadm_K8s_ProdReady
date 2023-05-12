@@ -62,5 +62,5 @@ sudo rm /etc/containerd/config.toml
 sudo systemctl restart containerd
 
 sudo apt install awscli -y
-sleep 10
+sleep 20
 sudo aws lambda invoke --function-name join_cmd_function --region eu-west-3 --payload '{}' response.json
