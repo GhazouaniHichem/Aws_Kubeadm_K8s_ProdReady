@@ -40,12 +40,12 @@ variable "ssh_user" {
 
 variable "master_instance_type" {
   type    = string
-  default = "t3.small"
+  default = "t2.medium"
 }
 
 variable "worker_instance_type" {
   type    = string
-  default = "t3.micro"
+  default = "t2.medium"
 }
 
 variable "cluster_name" {
@@ -55,7 +55,7 @@ variable "cluster_name" {
 
 variable "bucket_name" {
   type    = string
-  default = "terraform.tfstate.mydomaine.com"
+  default = "terraform.tfstate.devopswithghazouani.com"
 }
 
 variable "vpc_name" {
