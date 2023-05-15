@@ -62,3 +62,11 @@ variable "vpc_name" {
   type = string
   default = "kubernetes_vpc"
 }
+
+
+################################# Helm-Charts module variables #################
+
+variable "kube_config" {
+  type    = string
+  default = "./config"
+}

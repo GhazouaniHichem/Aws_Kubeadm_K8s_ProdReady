@@ -9,7 +9,7 @@
 
 module "kubernetes" {
   
-  source = "./kubernetes"
+  source = "./kubernetes-cluster"
   region = var.AWS_REGION
   cluster_name = var.cluster_name
   vpc_name = var.vpc_name
@@ -22,5 +22,13 @@ module "kubernetes" {
   nodes_min_size = var.nodes_min_size
   nodes_desired_size = var.nodes_desired_size
   worker_instance_type = var.worker_instance_type
+  
+}
+
+
+module "helm_charts" {
+  
+  source = "./helm-charts"
+  depends_on = [ module.kubernetes ]
   
 }

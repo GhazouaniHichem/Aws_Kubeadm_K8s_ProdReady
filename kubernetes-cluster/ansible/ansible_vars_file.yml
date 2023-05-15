@@ -1,0 +1,3 @@
+
+master_lb: api-basic-cluster-32af6245bb3db0ca.elb.eu-west-3.amazonaws.com
+cluster_name: basic-cluster

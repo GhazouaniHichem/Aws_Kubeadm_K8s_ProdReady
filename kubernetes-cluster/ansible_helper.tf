@@ -1,13 +1,13 @@
 
 resource "local_file" "ansible_inventory" {
-  content = templatefile("${path.root}/kubernetes/templates/inventry.tftpl",
+  content = templatefile("${path.root}/kubernetes-cluster/templates/inventry.tftpl",
     {
       masters-dns = aws_instance.masters.*.private_dns,
       masters-ip  = aws_instance.masters.*.private_ip,
       masters-id  = aws_instance.masters.*.id
     }
   )
-  filename = "${path.root}/kubernetes/inventory"
+  filename = "${path.root}/kubernetes-cluster/inventory"
 }
 
 # wating for bastion server user data init.
@@ -35,7 +35,7 @@ resource "null_resource" "provisioner" {
   }
 
   provisioner "file" {
-    source      = "${path.root}/kubernetes/inventory"
+    source      = "${path.root}/kubernetes-cluster/inventory"
     destination = "/home/ubuntu/inventory"
 
     connection {
@@ -55,7 +55,7 @@ resource "local_file" "ansible_vars_file" {
         master_lb: ${aws_lb.k8_masters_lb.dns_name}
         cluster_name: ${var.cluster_name}
         DOC
-  filename = "kubernetes/ansible/ansible_vars_file.yml"
+  filename = "kubernetes-cluster/ansible/ansible_vars_file.yml"
 }
 
 resource "null_resource" "copy_ansible_playbooks" {
@@ -71,7 +71,7 @@ resource "null_resource" "copy_ansible_playbooks" {
   }
 
   provisioner "file" {
-    source      = "${path.root}/kubernetes/ansible"
+    source      = "${path.root}/kubernetes-cluster/ansible"
     destination = "/home/ubuntu/ansible/"
 
     connection {
