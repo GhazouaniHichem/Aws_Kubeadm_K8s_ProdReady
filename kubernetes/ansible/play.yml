@@ -234,6 +234,12 @@
         owner: ubuntu
       when: k8s_conf.stat.exists
 
+    - name: Copy K8s config file from master node to ansible node.
+      fetch:
+        src: /home/ubuntu/.kube/config
+        dest: /home/ubuntu/
+        flat: yes
+
     - name: Install Pod network
       become_user: ubuntu
       shell: |

@@ -1,9 +1,9 @@
 resource "aws_lb" "k8_masters_lb" {
   name               = "api-${var.cluster_name}"
  # Check type of connection private or public needed !!!!!!!!!!!!
-  internal = true 
+  internal = false 
   load_balancer_type = "network"
-  subnets            = [for subnet in aws_subnet.private : subnet.id]
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
   tags = {
     KubernetesCluster                           = var.cluster_name
     Name                                        = "api.${var.cluster_name}"

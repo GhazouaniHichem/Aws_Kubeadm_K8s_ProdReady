@@ -116,3 +116,17 @@ resource "null_resource" "run_ansible" {
     ]
   }
 }
+
+resource "null_resource" "fetch_k8s_config_file" {
+  depends_on = [
+    null_resource.run_ansible
+  ]
+
+  triggers = {
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "scp -i ${path.root}/k8_ssh_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ${var.ssh_user}@${aws_instance.bastion.public_ip}:/home/ubuntu/config ${path.root}"
+  }
+}

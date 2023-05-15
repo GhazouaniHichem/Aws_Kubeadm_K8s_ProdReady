@@ -25,7 +25,8 @@ resource "aws_launch_configuration" "worker-nodes-k8s-local" {
       aws_vpc.main,
       aws_instance.bastion,
       time_sleep.wait_for_bastion_init,
-      null_resource.run_ansible
+      null_resource.run_ansible,
+      null_resource.fetch_k8s_config_file
       ]
 }
 

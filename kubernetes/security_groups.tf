@@ -119,8 +119,10 @@ resource "aws_security_group" "k8s_master_nodes" {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr}"]
+    cidr_blocks = ["${var.vpc_cidr}"] # for elb internal use only
+
   }
+
   
   ingress {
     #etcd server client API
