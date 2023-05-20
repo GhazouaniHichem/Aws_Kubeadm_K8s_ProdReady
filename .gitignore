@@ -5,3 +5,4 @@ terraform.*
 k8_ssh_key.*
 terraform.tfvars
 config
+instructions.txt
