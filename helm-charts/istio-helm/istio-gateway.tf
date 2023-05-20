@@ -4,13 +4,11 @@
 resource "helm_release" "gateway" {
   name = "gateway"
 
-  repository       = "https://istio-release.storage.googleapis.com/charts"
-  chart            = "gateway"
-  version          = "1.17.1"
-  namespace        = "istio-ingress"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "gateway"
+  version    = "1.17.1"
+  namespace  = "istio-ingress"
   create_namespace = true
-
-
   depends_on = [
     helm_release.istio_base,
     helm_release.istiod

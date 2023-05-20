@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "trust-assume-role-policy" {
 
 
 resource "aws_iam_role" "terraform_k8s_master_role" {
-  name               = "terraform_master_role"
+  name               = "masters_role"
   assume_role_policy = data.aws_iam_policy_document.trust-assume-role-policy.json
 }
 
@@ -19,7 +19,7 @@ resource "aws_iam_role" "terraform_k8s_master_role" {
 
 
 resource "aws_iam_role_policy" "master_policy" {
-  name   = "terraform_master_policy"
+  name   = "masters_policy"
   role   = aws_iam_role.terraform_k8s_master_role.id
   policy = <<EOF
 {
@@ -94,12 +94,12 @@ EOF
 
 
 resource "aws_iam_role" "terraform_k8s_worker_role" {
-  name               = "terraform_worker_role"
+  name               = "workers_role"
   assume_role_policy = data.aws_iam_policy_document.trust-assume-role-policy.json
 }
 
 resource "aws_iam_role_policy" "worker_policy" {
-  name   = "terraform_worker_policy"
+  name   = "workers_policy"
   role   = aws_iam_role.terraform_k8s_worker_role.id
   policy = <<EOF
 {
@@ -213,13 +213,13 @@ EOF
 
 
 resource "aws_iam_instance_profile" "terraform_k8s_master_role-Instance-Profile" {
-  name = "terraform_master_role-Instance-Profile"
+  name = "masters_role-Instance-Profile"
   role = aws_iam_role.terraform_k8s_master_role.name
 }
 
 
 resource "aws_iam_instance_profile" "terraform_k8s_worker_role-Instance-Profile" {
-  name = "terraform_cluster-iam-worker-Instance-Profile"
+  name = "workers-role-Instance-Profile"
   role = aws_iam_role.terraform_k8s_worker_role.name
 }
 

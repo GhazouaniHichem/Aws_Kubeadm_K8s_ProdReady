@@ -10,3 +10,7 @@ module "istio" {
 module "argocd" {
   source = "./argocd-helm"
 }
+
+module "argo-rollouts" {
+  source = "./argo-rollouts-helm"
+}
