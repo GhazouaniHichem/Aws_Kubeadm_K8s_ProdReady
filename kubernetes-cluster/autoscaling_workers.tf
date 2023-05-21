@@ -7,7 +7,7 @@ resource "aws_launch_configuration" "worker-nodes-k8s-local" {
   key_name             = aws_key_pair.k8_ssh.key_name
   iam_instance_profile = aws_iam_instance_profile.terraform_k8s_worker_role-Instance-Profile.name
   security_groups      = [aws_security_group.k8_nodes.id, aws_security_group.k8s_worker_nodes.id]
-  user_data            = file("${path.module}/kubeadm-scripts/worker_script.sh")
+  user_data            = file("${path.module}/workers-nodes-script/worker_script.sh")
 
   lifecycle {
     create_before_destroy = true

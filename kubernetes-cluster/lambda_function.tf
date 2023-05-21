@@ -1,6 +1,6 @@
 #Defines variable I wll use to name the Lambda I'm creating
 locals {
-  lambda_name = "join_cmd_function"
+  lambda_name = "join_k8s_cluster"
 }
 
 #Module containing IAM permissions used by Lambda
@@ -11,8 +11,8 @@ module "iam_module" {
 #Defines a data resource of type "archive_file" named "zip_the_python_code". 
 data "archive_file" "zip_the_python_code" {
   type = "zip"
-  source_dir = "${path.module}/python/"
-  output_path = "${path.module}/python/${local.lambda_name}.zip"
+  source_dir = "${path.module}/lambda_python_code/"
+  output_path = "${path.module}/lambda_python_code/${local.lambda_name}.zip"
 }
 
 
@@ -20,7 +20,7 @@ data "archive_file" "zip_the_python_code" {
 module "lambda_module" {
   source      = "./lambda_module"
   lambda_name = local.lambda_name
-  filename = "${path.module}/python/${local.lambda_name}.zip"
+  filename = "${path.module}/lambda_python_code/${local.lambda_name}.zip"
   lambda_role_arn        = module.iam_module.lambda_role_arn
   role_policy_attachment = module.iam_module.role_policy_attachment
 #  topic_arn = aws_sns_topic.worker_asg_topic.arn

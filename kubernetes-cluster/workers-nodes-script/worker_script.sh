@@ -63,4 +63,4 @@ sudo systemctl restart containerd
 
 sudo apt install awscli -y
 sleep 20
-sudo aws lambda invoke --function-name join_cmd_function --region eu-west-3 --payload '{}' response.json
+sudo aws lambda invoke --function-name join_k8s_cluster --region eu-west-3 --payload '{}' response.json

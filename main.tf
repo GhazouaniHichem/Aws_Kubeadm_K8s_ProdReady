@@ -36,20 +36,8 @@ resource "time_sleep" "wait_3_minutes" {
 module "helm_charts" { 
 
   source = "./helm-charts"
+  kube_config = var.kube_config
   depends_on = [ module.kubernetes, time_sleep.wait_3_minutes ]
-
+  
 }
 
-resource "null_resource" "kubectl" {
-  provisioner "local-exec" {
-    command     = <<-EOT
-                  kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.17/samples/addons/prometheus.yaml --kubeconfig ${var.kube_config}
-                  kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.17/samples/addons/kiali.yaml --kubeconfig ${var.kube_config}
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-    environment = {
-      KUBECONFIG = base64encode(var.kube_config)
-    }
-  }
-  depends_on = [ module.helm_charts, module.kubernetes, time_sleep.wait_3_minutes ]
-}
