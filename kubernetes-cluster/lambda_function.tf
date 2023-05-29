@@ -5,7 +5,7 @@ locals {
 
 #Module containing IAM permissions used by Lambda
 module "iam_module" {
-  source = "./iam_module"
+  source = "./lambda_iam_role"
 }
 
 #Defines a data resource of type "archive_file" named "zip_the_python_code". 

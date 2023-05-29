@@ -5,7 +5,7 @@
 resource "aws_lambda_function" "lambda_function" {
   #Uses the Python file that is zipped in main.tf
   filename      = var.filename
-  function_name = "join_cmd_function"
+  function_name = "join_k8s_cluster"
   #Attach IAM role to Lambda
   role          = var.lambda_role_arn
   handler       = "lambda_function.lambda_handler"
