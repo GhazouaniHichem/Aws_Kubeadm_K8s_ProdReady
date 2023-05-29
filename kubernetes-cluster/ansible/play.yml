@@ -269,17 +269,6 @@
     - debug:
         var: join_command
 
-    - name: Copy join command to local file
-      local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join_command"
-
-    - name: Get worker node join command
-      shell: kubeadm token create --print-join-command
-      register: join_node_command
-
-    - name: Copy worker node join command to local file
-      local_action: copy content="{{ join_node_command.stdout_lines[0] }}" dest="./join_node_command"
-###
-
 ####### Configure other master nodes:
 
 - hosts: masters_others
